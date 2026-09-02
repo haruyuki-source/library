@@ -13,9 +13,9 @@ export const useAuthStore = defineStore('auth', {
   },
 
   actions: {
-    // 登录:保存 token 与用户信息
+    // 登录:保存 token 与用户信息(响应拦截器已解包,直接返回 data)
     async login(credentials) {
-      const { data } = await loginApi(credentials)
+      const data = await loginApi(credentials)
       this.token = data.access_token
       this.user = data.user || null
       localStorage.setItem('token', this.token)
@@ -28,7 +28,7 @@ export const useAuthStore = defineStore('auth', {
     // 拉取当前用户信息
     async fetchProfile() {
       if (!this.token) return null
-      const { data } = await getProfileApi()
+      const data = await getProfileApi()
       this.user = data
       localStorage.setItem('user', JSON.stringify(this.user))
       return data

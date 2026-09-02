@@ -19,24 +19,34 @@ const query = reactive({
   page_size: 10
 })
 
+function emptyForm() {
+  return {
+    id: null,
+    card_no: '',
+    name: '',
+    gender: 'male',
+    phone: '',
+    email: '',
+    department: '',
+    status: 'active',
+    max_borrow: 5
+  }
+}
+
 const dialog = reactive({
   visible: false,
   isEdit: false,
-  form: {
-    id: null,
-    name: '',
-    gender: 'M',
-    phone: '',
-    email: '',
-    address: '',
-    card_number: ''
-  }
+  form: emptyForm()
 })
 
 const formRef = ref()
 const rules = {
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  card_number: [{ required: true, message: '请输入借书证号', trigger: 'blur' }]
+  card_no: [{ required: true, message: '请输入借书证号', trigger: 'blur' }]
+}
+
+function genderText(v) {
+  return { male: '男', female: '女', other: '其他' }[v] || v
 }
 
 async function fetchList() {
@@ -57,26 +67,14 @@ function handleSearch() {
   fetchList()
 }
 
-function resetForm() {
-  Object.assign(dialog.form, {
-    id: null,
-    name: '',
-    gender: 'M',
-    phone: '',
-    email: '',
-    address: '',
-    card_number: ''
-  })
-}
-
 function openCreate() {
-  resetForm()
+  Object.assign(dialog.form, emptyForm())
   dialog.isEdit = false
   dialog.visible = true
 }
 
 function openEdit(row) {
-  Object.assign(dialog.form, row)
+  Object.assign(dialog.form, emptyForm(), row)
   dialog.isEdit = true
   dialog.visible = true
 }
@@ -133,15 +131,21 @@ onMounted(fetchList)
     <el-card shadow="never">
       <el-table v-loading="loading" :data="list" border stripe>
         <el-table-column type="index" label="#" width="50" />
-        <el-table-column prop="card_number" label="借书证号" width="150" />
-        <el-table-column prop="name" label="姓名" width="120" />
-        <el-table-column label="性别" width="80">
-          <template #default="{ row }">
-            {{ row.gender === 'F' ? '女' : '男' }}
-          </template>
+        <el-table-column prop="card_no" label="借书证号" width="130" />
+        <el-table-column prop="name" label="姓名" width="110" />
+        <el-table-column label="性别" width="70" align="center">
+          <template #default="{ row }">{{ genderText(row.gender) }}</template>
         </el-table-column>
+        <el-table-column prop="department" label="学院/部门" width="140" />
         <el-table-column prop="phone" label="手机" width="130" />
         <el-table-column prop="email" label="邮箱" min-width="160" />
+        <el-table-column label="状态" width="80" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 'active' ? 'success' : 'info'">
+              {{ row.status === 'active' ? '正常' : '停用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
@@ -166,20 +170,24 @@ onMounted(fetchList)
     <el-dialog
       v-model="dialog.visible"
       :title="dialog.isEdit ? '编辑读者' : '新增读者'"
-      width="520px"
+      width="560px"
     >
-      <el-form ref="formRef" :model="dialog.form" :rules="rules" label-width="90px">
-        <el-form-item label="借书证号" prop="card_number">
-          <el-input v-model="dialog.form.card_number" />
+      <el-form ref="formRef" :model="dialog.form" :rules="rules" label-width="100px">
+        <el-form-item label="借书证号" prop="card_no">
+          <el-input v-model="dialog.form.card_no" />
         </el-form-item>
         <el-form-item label="姓名" prop="name">
           <el-input v-model="dialog.form.name" />
         </el-form-item>
         <el-form-item label="性别">
           <el-radio-group v-model="dialog.form.gender">
-            <el-radio value="M">男</el-radio>
-            <el-radio value="F">女</el-radio>
+            <el-radio value="male">男</el-radio>
+            <el-radio value="female">女</el-radio>
+            <el-radio value="other">其他</el-radio>
           </el-radio-group>
+        </el-form-item>
+        <el-form-item label="学院/部门">
+          <el-input v-model="dialog.form.department" />
         </el-form-item>
         <el-form-item label="手机">
           <el-input v-model="dialog.form.phone" />
@@ -187,8 +195,14 @@ onMounted(fetchList)
         <el-form-item label="邮箱">
           <el-input v-model="dialog.form.email" />
         </el-form-item>
-        <el-form-item label="地址">
-          <el-input v-model="dialog.form.address" type="textarea" />
+        <el-form-item label="最大借阅数">
+          <el-input-number v-model="dialog.form.max_borrow" :min="1" :max="100" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-radio-group v-model="dialog.form.status">
+            <el-radio value="active">正常</el-radio>
+            <el-radio value="disabled">停用</el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>

@@ -20,13 +20,24 @@ request.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// 响应拦截:统一错误处理(401 跳登录)
+// 响应拦截:解包后端 {code, msg, data} 信封,直接返回 data
 request.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    const body = response.data
+    if (body && typeof body === 'object' && 'code' in body) {
+      if (body.code === 0) {
+        return body.data
+      }
+      // 业务错误:统一提示并拒绝
+      ElMessage.error(body.msg || '请求失败')
+      return Promise.reject(new Error(body.msg || '请求失败'))
+    }
+    return body
+  },
   (error) => {
     const status = error.response?.status
-    const message =
-      error.response?.data?.message || error.message || '请求失败'
+    const body = error.response?.data
+    const message = body?.msg || error.message || '请求失败'
 
     if (status === 401) {
       localStorage.removeItem('token')

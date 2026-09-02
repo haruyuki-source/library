@@ -7,11 +7,13 @@ import {
   updateBookApi,
   deleteBookApi
 } from '@/api/book'
+import { getCategoriesApi } from '@/api/category'
 
 // 图书管理:列表 + 搜索 + 增删改
 const loading = ref(false)
 const list = ref([])
 const total = ref(0)
+const categories = ref([])
 
 const query = reactive({
   keyword: '',
@@ -19,19 +21,27 @@ const query = reactive({
   page_size: 10
 })
 
-const dialog = reactive({
-  visible: false,
-  isEdit: false,
-  form: {
+function emptyForm() {
+  return {
     id: null,
     title: '',
     author: '',
     isbn: '',
-    category_id: null,
-    stock: 0,
     publisher: '',
+    publish_year: null,
+    category_id: null,
+    location: '',
+    total_quantity: 1,
+    available_quantity: 1,
+    price: 0,
     description: ''
   }
+}
+
+const dialog = reactive({
+  visible: false,
+  isEdit: false,
+  form: emptyForm()
 })
 
 const formRef = ref()
@@ -53,32 +63,28 @@ async function fetchList() {
   }
 }
 
+async function fetchCategories() {
+  try {
+    const { items } = await getCategoriesApi()
+    categories.value = items || []
+  } catch (err) {
+    categories.value = []
+  }
+}
+
 function handleSearch() {
   query.page = 1
   fetchList()
 }
 
-function resetForm() {
-  Object.assign(dialog.form, {
-    id: null,
-    title: '',
-    author: '',
-    isbn: '',
-    category_id: null,
-    stock: 0,
-    publisher: '',
-    description: ''
-  })
-}
-
 function openCreate() {
-  resetForm()
+  Object.assign(dialog.form, emptyForm())
   dialog.isEdit = false
   dialog.visible = true
 }
 
 function openEdit(row) {
-  Object.assign(dialog.form, row)
+  Object.assign(dialog.form, emptyForm(), row)
   dialog.isEdit = true
   dialog.visible = true
 }
@@ -105,7 +111,10 @@ async function handleDelete(row) {
   fetchList()
 }
 
-onMounted(fetchList)
+onMounted(() => {
+  fetchCategories()
+  fetchList()
+})
 </script>
 
 <template>
@@ -135,11 +144,17 @@ onMounted(fetchList)
     <el-card shadow="never">
       <el-table v-loading="loading" :data="list" border stripe>
         <el-table-column type="index" label="#" width="50" />
+        <el-table-column prop="isbn" label="ISBN" width="140" />
         <el-table-column prop="title" label="书名" min-width="160" />
-        <el-table-column prop="author" label="作者" width="120" />
-        <el-table-column prop="isbn" label="ISBN" width="150" />
-        <el-table-column prop="publisher" label="出版社" width="140" />
-        <el-table-column prop="stock" label="库存" width="80" align="center" />
+        <el-table-column prop="author" label="作者" width="110" />
+        <el-table-column prop="publisher" label="出版社" width="150" />
+        <el-table-column label="分类" width="100">
+          <template #default="{ row }">
+            {{ row.category?.name || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="available_quantity" label="可借" width="70" align="center" />
+        <el-table-column prop="total_quantity" label="总藏" width="70" align="center" />
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
@@ -164,29 +179,101 @@ onMounted(fetchList)
     <el-dialog
       v-model="dialog.visible"
       :title="dialog.isEdit ? '编辑图书' : '新增图书'"
-      width="560px"
+      width="600px"
     >
-      <el-form ref="formRef" :model="dialog.form" :rules="rules" label-width="80px">
-        <el-form-item label="书名" prop="title">
-          <el-input v-model="dialog.form.title" />
-        </el-form-item>
-        <el-form-item label="作者" prop="author">
-          <el-input v-model="dialog.form.author" />
-        </el-form-item>
-        <el-form-item label="ISBN">
-          <el-input v-model="dialog.form.isbn" />
-        </el-form-item>
-        <el-form-item label="分类">
-          <el-input-number v-model="dialog.form.category_id" :min="1" />
-        </el-form-item>
-        <el-form-item label="出版社">
-          <el-input v-model="dialog.form.publisher" />
-        </el-form-item>
-        <el-form-item label="库存">
-          <el-input-number v-model="dialog.form.stock" :min="0" />
-        </el-form-item>
+      <el-form ref="formRef" :model="dialog.form" :rules="rules" label-width="90px">
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="书名" prop="title">
+              <el-input v-model="dialog.form.title" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="作者" prop="author">
+              <el-input v-model="dialog.form.author" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="ISBN">
+              <el-input v-model="dialog.form.isbn" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="分类">
+              <el-select
+                v-model="dialog.form.category_id"
+                placeholder="请选择"
+                clearable
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="c in categories"
+                  :key="c.id"
+                  :label="c.name"
+                  :value="c.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="出版社">
+              <el-input v-model="dialog.form.publisher" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="出版年份">
+              <el-input-number
+                v-model="dialog.form.publish_year"
+                :min="0"
+                :max="3000"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="馆藏位置">
+              <el-input v-model="dialog.form.location" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="价格">
+              <el-input-number
+                v-model="dialog.form.price"
+                :min="0"
+                :precision="2"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="总馆藏">
+              <el-input-number
+                v-model="dialog.form.total_quantity"
+                :min="0"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="可借库存">
+              <el-input-number
+                v-model="dialog.form.available_quantity"
+                :min="0"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-form-item label="简介">
-          <el-input v-model="dialog.form.description" type="textarea" />
+          <el-input v-model="dialog.form.description" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
