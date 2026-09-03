@@ -89,6 +89,17 @@ async function handleLogin() {
   padding: 20px 10px;
 }
 
+@media (max-width: 480px) {
+  .login-card {
+    width: calc(100vw - 32px);
+    padding: 16px 12px;
+    border-radius: 10px;
+  }
+  .title {
+    font-size: 20px;
+  }
+}
+
 .title {
   text-align: center;
   margin: 0 0 24px;
