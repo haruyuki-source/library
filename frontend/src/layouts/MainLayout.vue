@@ -194,18 +194,55 @@ onBeforeUnmount(() => {
 }
 
 .logo {
-  height: 60px;
-  line-height: 60px;
+  height: 50px;
+  line-height: 50px;
   text-align: center;
   color: #fff;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   letter-spacing: 2px;
   background-color: #00112a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .aside :deep(.el-menu) {
   border-right: none;
+}
+
+/* 菜单项:左侧 active 指示条 + 悬停底色 */
+.aside :deep(.el-menu-item),
+.mobile-drawer :deep(.el-menu-item) {
+  height: 48px;
+  line-height: 48px;
+  margin: 4px 8px;
+  border-radius: 6px;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.aside :deep(.el-menu-item:hover),
+.mobile-drawer :deep(.el-menu-item:hover) {
+  background-color: rgba(64, 158, 255, 0.1) !important;
+}
+
+/* active 菜单项:左侧蓝色指示条 + 高亮 */
+.aside :deep(.el-menu-item.is-active),
+.mobile-drawer :deep(.el-menu-item.is-active) {
+  background-color: rgba(64, 158, 255, 0.15) !important;
+  color: #409eff !important;
+}
+
+.aside :deep(.el-menu-item.is-active)::before,
+.mobile-drawer :deep(.el-menu-item.is-active)::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background-color: #409eff;
+  border-radius: 0 2px 2px 0;
 }
 
 /* ---------- 顶部 ---------- */

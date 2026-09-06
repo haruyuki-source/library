@@ -257,7 +257,7 @@ class BookSchema(Schema):
     category = fields.Nested(CategorySchema, dump_only=True)
 
     @validates("category_id")
-    def validate_category(self, value):
+    def validate_category(self, value, **kwargs):
         if value is not None:
             cat = Category.query.get(value)
             if cat is None:
