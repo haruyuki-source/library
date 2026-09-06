@@ -1,7 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { getBooksApi } from '@/api/book'
+import { getReadersApi } from '@/api/reader'
+import { getCategoriesApi } from '@/api/category'
+import { getBorrowsApi } from '@/api/borrow'
 
-// 仪表盘:统计卡片占位(待对接统计接口)
+// 仪表盘:统计卡片(对接后端真实数据)
 const stats = ref([
   { label: '图书总数', value: 0, icon: 'Reading', color: '#409eff' },
   { label: '读者总数', value: 0, icon: 'User', color: '#67c23a' },
@@ -9,9 +13,30 @@ const stats = ref([
   { label: '分类数', value: 0, icon: 'Files', color: '#f56c6c' }
 ])
 
-onMounted(() => {
-  // TODO: 接入后端统计接口后填充真实数据
-})
+const loading = ref(false)
+
+async function fetchStats() {
+  loading.value = true
+  try {
+    // 并行请求 4 个统计数据
+    const [books, readers, categories, borrows] = await Promise.all([
+      getBooksApi({ page_size: 1 }),
+      getReadersApi({ page_size: 1 }),
+      getCategoriesApi(),
+      getBorrowsApi({ status: 'borrowed', page_size: 1 })
+    ])
+    stats.value[0].value = books.total || 0
+    stats.value[1].value = readers.total || 0
+    stats.value[2].value = borrows.total || 0
+    stats.value[3].value = categories.total || 0
+  } catch (err) {
+    // 接口错误已由 request 拦截器统一提示
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(fetchStats)
 </script>
 
 <template>
