@@ -181,7 +181,7 @@ onMounted(() => {
       :title="dialog.isEdit ? '编辑图书' : '新增图书'"
       width="600px"
     >
-      <el-form ref="formRef" :model="dialog.form" :rules="rules" label-width="70px" label-position="left">
+      <el-form ref="formRef" :model="dialog.form" :rules="rules" label-width="56px" label-position="left">
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="书名" prop="title">

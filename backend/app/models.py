@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
-from marshmallow import Schema, fields, validate, validates, ValidationError, post_load, pre_load
+from marshmallow import Schema, fields, validate, validates, ValidationError, post_load, pre_load, EXCLUDE
 
 from .extensions import db
 
@@ -219,6 +219,9 @@ class RegisterSchema(Schema):
 
 
 class CategorySchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
     id = fields.Integer(dump_only=True)
     name = fields.String(required=True, validate=validate.Length(min=1, max=64))
     code = fields.String(validate=validate.Length(max=32))
@@ -227,6 +230,9 @@ class CategorySchema(Schema):
 
 
 class ReaderSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
     id = fields.Integer(dump_only=True)
     card_no = fields.String(required=True, validate=validate.Length(min=1, max=32))
     name = fields.String(required=True, validate=validate.Length(min=1, max=64))
@@ -240,6 +246,9 @@ class ReaderSchema(Schema):
 
 
 class BookSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
     id = fields.Integer(dump_only=True)
     isbn = fields.String(validate=validate.Length(max=32), allow_none=True)
     title = fields.String(required=True, validate=validate.Length(min=1, max=255))
@@ -275,6 +284,9 @@ class BookSchema(Schema):
 
 
 class BorrowSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
     id = fields.Integer(dump_only=True)
     reader_id = fields.Integer(required=True)
     book_id = fields.Integer(required=True)
