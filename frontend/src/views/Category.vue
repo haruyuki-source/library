@@ -87,12 +87,12 @@ onMounted(fetchList)
     <el-card shadow="never">
       <el-table v-loading="loading" :data="list" border stripe>
         <el-table-column type="index" label="#" width="50" />
-        <el-table-column prop="name" label="分类名称" min-width="180" />
-        <el-table-column prop="description" label="描述" min-width="240" />
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column prop="name" label="分类名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="description" label="描述" min-width="240" class-name="hide-mobile" />
+        <el-table-column label="操作" width="100" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

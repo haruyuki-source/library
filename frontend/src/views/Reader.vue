@@ -131,25 +131,25 @@ onMounted(fetchList)
     <el-card shadow="never">
       <el-table v-loading="loading" :data="list" border stripe>
         <el-table-column type="index" label="#" width="50" />
+        <el-table-column prop="name" label="姓名" width="110" show-overflow-tooltip />
         <el-table-column prop="card_no" label="借书证号" width="130" />
-        <el-table-column prop="name" label="姓名" width="110" />
-        <el-table-column label="性别" width="70" align="center">
+        <el-table-column label="性别" width="70" align="center" class-name="hide-mobile">
           <template #default="{ row }">{{ genderText(row.gender) }}</template>
         </el-table-column>
-        <el-table-column prop="department" label="学院/部门" width="140" />
-        <el-table-column prop="phone" label="手机" width="130" />
-        <el-table-column prop="email" label="邮箱" min-width="160" />
-        <el-table-column label="状态" width="80" align="center">
+        <el-table-column prop="department" label="学院/部门" width="140" class-name="hide-mobile" />
+        <el-table-column prop="phone" label="手机" width="130" class-name="hide-mobile" />
+        <el-table-column prop="email" label="邮箱" min-width="160" class-name="hide-mobile" />
+        <el-table-column label="状态" width="80" align="center" class-name="hide-mobile">
           <template #default="{ row }">
             <el-tag :type="row.status === 'active' ? 'success' : 'info'">
               {{ row.status === 'active' ? '正常' : '停用' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="100" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

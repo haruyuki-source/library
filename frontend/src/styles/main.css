@@ -81,3 +81,28 @@ a {
     --el-card-padding: 12px 14px;
   }
 }
+
+/* ========== 表格移动端响应式优化 ========== */
+
+/* 标记为 hide-mobile 的列在窄屏隐藏(同时作用于表头与单元格) */
+@media (max-width: 768px) {
+  .el-table th.hide-mobile,
+  .el-table td.hide-mobile {
+    display: none;
+  }
+
+  /* 操作列按钮更紧凑,减少占用空间 */
+  .el-table .el-button + .el-button {
+    margin-left: 4px;
+  }
+}
+
+/* 表格容器:确保横向滚动可用,且不撑破布局 */
+.el-table {
+  width: 100%;
+}
+
+/* 确保表格外层容器允许横向滚动 */
+.el-table--scrollable-x .el-table__body-wrapper {
+  overflow-x: auto;
+}

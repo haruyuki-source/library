@@ -145,29 +145,30 @@ onMounted(fetchList)
     <el-card shadow="never">
       <el-table v-loading="loading" :data="list" border stripe>
         <el-table-column type="index" label="#" width="50" />
-        <el-table-column label="书名" min-width="160">
+        <el-table-column label="书名" min-width="140" show-overflow-tooltip>
           <template #default="{ row }">{{ row.book?.title || '-' }}</template>
         </el-table-column>
-        <el-table-column label="读者" width="120">
+        <el-table-column label="读者" width="100" class-name="hide-mobile">
           <template #default="{ row }">{{ row.reader?.name || '-' }}</template>
         </el-table-column>
-        <el-table-column prop="borrow_date" label="借阅日期" width="120" />
-        <el-table-column prop="due_date" label="应还日期" width="120" />
-        <el-table-column prop="return_date" label="归还日期" width="120" />
-        <el-table-column prop="renew_count" label="续借" width="70" align="center" />
-        <el-table-column label="状态" width="100" align="center">
+        <el-table-column prop="borrow_date" label="借阅日期" width="120" class-name="hide-mobile" />
+        <el-table-column prop="due_date" label="应还日期" width="120" class-name="hide-mobile" />
+        <el-table-column prop="return_date" label="归还日期" width="120" class-name="hide-mobile" />
+        <el-table-column prop="renew_count" label="续借" width="70" align="center" class-name="hide-mobile" />
+        <el-table-column label="状态" width="90" align="center">
           <template #default="{ row }">
-            <el-tag :type="statusType(row.status)">
+            <el-tag :type="statusType(row.status)" size="small">
               {{ statusText(row.status) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="230" fixed="right">
+        <el-table-column label="操作" width="120" align="center">
           <template #default="{ row }">
             <el-button
               v-if="row.status === 'borrowed' || row.status === 'overdue'"
               link
               type="primary"
+              size="small"
               @click="handleReturn(row)"
             >
               归还
@@ -176,11 +177,12 @@ onMounted(fetchList)
               v-if="row.status === 'borrowed'"
               link
               type="warning"
+              size="small"
               @click="openRenew(row)"
             >
               续借
             </el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

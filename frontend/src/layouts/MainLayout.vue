@@ -34,10 +34,13 @@ const menus = computed(() =>
 const activeMenu = computed(() => route.path)
 
 function handleSelect(index) {
-  router.push(index)
-  // 移动端:菜单点击后关闭抽屉
+  // 移动端:先关闭抽屉,再跳转
   if (isMobile.value) {
     drawerVisible.value = false
+    // 等待抽屉关闭动画后再跳转,避免视觉卡顿
+    setTimeout(() => router.push(index), 200)
+  } else {
+    router.push(index)
   }
 }
 
@@ -298,13 +301,22 @@ onBeforeUnmount(() => {
 }
 
 /* ---------- 移动端抽屉样式(深度覆盖) ---------- */
+.mobile-drawer :deep(.el-drawer) {
+  background-color: #001529;
+}
+
 .mobile-drawer :deep(.el-drawer__body) {
   padding: 0;
   background-color: #001529;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .mobile-drawer :deep(.el-menu) {
   border-right: none;
+  background-color: #001529;
+  /* 让菜单至少撑满抽屉,避免底部出现白色空隙 */
+  min-height: 100%;
 }
 
 /* ---------- 媒体查询补充:窄屏微调 ---------- */

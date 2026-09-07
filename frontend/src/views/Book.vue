@@ -144,21 +144,21 @@ onMounted(() => {
     <el-card shadow="never">
       <el-table v-loading="loading" :data="list" border stripe>
         <el-table-column type="index" label="#" width="50" />
-        <el-table-column prop="isbn" label="ISBN" width="140" />
-        <el-table-column prop="title" label="书名" min-width="160" />
-        <el-table-column prop="author" label="作者" width="110" />
-        <el-table-column prop="publisher" label="出版社" width="150" />
-        <el-table-column label="分类" width="100">
+        <el-table-column prop="title" label="书名" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="isbn" label="ISBN" width="130" />
+        <el-table-column prop="author" label="作者" width="90" class-name="hide-mobile" />
+        <el-table-column prop="publisher" label="出版社" width="120" class-name="hide-mobile" />
+        <el-table-column label="分类" width="80" class-name="hide-mobile">
           <template #default="{ row }">
             {{ row.category?.name || '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="available_quantity" label="可借" width="70" align="center" />
-        <el-table-column prop="total_quantity" label="总藏" width="70" align="center" />
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column prop="available_quantity" label="可借" width="60" align="center" class-name="hide-mobile" />
+        <el-table-column prop="total_quantity" label="总藏" width="60" align="center" class-name="hide-mobile" />
+        <el-table-column label="操作" width="100" align="center">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
