@@ -102,16 +102,16 @@ onMounted(fetchStats)
 .stat-body {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   cursor: pointer;
 }
 
 .stat-icon {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 8px;
   color: #fff;
-  font-size: 26px;
+  font-size: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -121,25 +121,52 @@ onMounted(fetchStats)
 .stat-text {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .stat-value {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
   color: #303133;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .stat-label {
   color: #909399;
   font-size: 13px;
   margin-top: 4px;
+  /* 关键:防止中文标签被挤成竖排 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stat-arrow {
   color: #c0c4cc;
   font-size: 16px;
   flex-shrink: 0;
+}
+
+/* 移动端:进一步压缩卡片内边距与图标,给文字留足横向空间 */
+@media (max-width: 480px) {
+  .stat-card :deep(.el-card__body) {
+    padding: 14px 12px !important;
+  }
+  .stat-body {
+    gap: 10px;
+  }
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+  .stat-value {
+    font-size: 20px;
+  }
+  .stat-label {
+    font-size: 12px;
+  }
 }
 
 .welcome {
