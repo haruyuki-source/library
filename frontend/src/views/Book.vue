@@ -181,7 +181,7 @@ onMounted(() => {
       :title="dialog.isEdit ? '编辑图书' : '新增图书'"
       width="600px"
     >
-      <el-form ref="formRef" :model="dialog.form" :rules="rules" label-width="90px">
+      <el-form ref="formRef" :model="dialog.form" :rules="rules" label-width="70px" label-position="left">
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="书名" prop="title">
@@ -226,11 +226,10 @@ onMounted(() => {
           </el-col>
           <el-col :span="12">
             <el-form-item label="出版年份">
-              <el-input-number
+              <el-input
                 v-model="dialog.form.publish_year"
-                :min="0"
-                :max="3000"
-                style="width: 100%"
+                type="number"
+                placeholder="如 2024"
               />
             </el-form-item>
           </el-col>
@@ -243,30 +242,21 @@ onMounted(() => {
           </el-col>
           <el-col :span="12">
             <el-form-item label="价格">
-              <el-input-number
+              <el-input
                 v-model="dialog.form.price"
-                :min="0"
-                :precision="2"
-                style="width: 100%"
+                type="number"
+                placeholder="0.00"
               />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="总馆藏">
-              <el-input-number
-                v-model="dialog.form.total_quantity"
-                :min="0"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
             <el-form-item label="可借库存">
               <el-input-number
                 v-model="dialog.form.available_quantity"
                 :min="0"
+                :controls-position="'right'"
                 style="width: 100%"
               />
             </el-form-item>

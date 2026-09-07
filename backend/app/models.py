@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from werkzeug.security import generate_password_hash, check_password_hash
-from marshmallow import Schema, fields, validate, validates, ValidationError, post_load
+from marshmallow import Schema, fields, validate, validates, ValidationError, post_load, pre_load
 
 from .extensions import db
 
@@ -263,6 +263,15 @@ class BookSchema(Schema):
             if cat is None:
                 raise ValidationError(f"分类ID {value} 不存在")
         return value
+
+    @pre_load
+    def empty_str_to_none(self, data, **kwargs):
+        """将前端传来的空字符串转为 None,避免数值字段校验失败"""
+        if isinstance(data, dict):
+            for k, v in list(data.items()):
+                if v == "":
+                    data[k] = None
+        return data
 
 
 class BorrowSchema(Schema):
