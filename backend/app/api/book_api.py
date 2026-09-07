@@ -57,9 +57,13 @@ def create_book():
         return jsonify({"code": 400, "msg": "参数校验失败", "errors": e.messages}), 400
 
     book = Book(**data)
-    # 新建时可用库存默认等于总库存
+    # 新建时:空值用默认值填充
+    if book.total_quantity is None:
+        book.total_quantity = 1
     if book.available_quantity is None:
         book.available_quantity = book.total_quantity
+    if book.price is None:
+        book.price = 0.0
     db.session.add(book)
     db.session.commit()
     return jsonify({"code": 0, "msg": "创建成功", "data": book.to_dict()}), 201
