@@ -38,4 +38,4 @@ dist-ssr
 .idea/
 *.swp
 *.swo
-*~
+*~backend/library.db
