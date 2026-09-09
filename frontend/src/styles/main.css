@@ -1,0 +1,417 @@
+/* 全局基础样式 */
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ========== 主题色:纯淡粉 覆盖 Element Plus 默认蓝色 ========== */
+:root {
+  /* 主色:淡粉 */
+  --el-color-primary: #f48fb1;
+  --el-color-primary-light-3: #f6a5c1;
+  --el-color-primary-light-5: #f8bbd0;
+  --el-color-primary-light-7: #fce4ec;
+  --el-color-primary-light-8: #fde8ef;
+  --el-color-primary-light-9: #fef4f7;
+  --el-color-primary-dark-2: #c2185b;
+
+  /* 辅助色(统一粉系深浅) */
+  --el-color-success: #f8bbd0;
+  --el-color-warning: #ec6b9a;
+  --el-color-danger: #e91e63;
+  --el-color-info: #f48fb1;
+
+  /* 文本与边框:粉色系柔和 */
+  --el-text-color-primary: #880e4f;
+  --el-text-color-regular: #ad1457;
+  --el-text-color-secondary: #c2185b;
+  --el-border-color: #f8bbd0;
+  --el-border-color-light: #fce4ec;
+  --el-fill-color-blank: #ffffff;
+
+  /* 项目自定义变量 */
+  --pink-pale: #fce4ec;
+  --pink-soft: #f8bbd0;
+  --pink-mid: #f48fb1;
+  --pink-deep: #880e4f;
+
+  /* 全站统一卡片渐变:所有卡片(el-card/统计卡/欢迎卡/登录卡)引用此变量 */
+  --card-gradient: linear-gradient(135deg, rgba(252, 228, 236, 0.95) 0%, rgba(248, 187, 208, 0.82) 100%);
+  --card-shadow: 0 4px 16px rgba(236, 107, 154, 0.12);
+  --card-shadow-hover: 0 6px 20px rgba(236, 107, 154, 0.18);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  color: var(--el-text-color-primary);
+  /* 纯淡粉渐变背景 */
+  background: linear-gradient(135deg, #fef4f7 0%, #fce4ec 50%, #f8bbd0 100%);
+  /* 防止 iOS 自动放大 */
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ========== Element Plus 移动端全局覆盖 ========== */
+
+/* 表格容器:允许横向滚动(手机列多时可左右滑) */
+.el-table {
+  width: 100%;
+}
+
+/* 弹窗:移动端限宽,避免超出屏幕 */
+.el-dialog {
+  margin: 16px auto !important;
+  max-width: calc(100vw - 32px);
+}
+
+/* 抽屉 body 内边距 */
+.el-drawer__body {
+  padding: 0;
+}
+
+/* 分页器:窄屏时紧凑显示 */
+@media (max-width: 480px) {
+  .el-pagination {
+    --el-pagination-button-disabled-bg-color: #f5f7fa;
+    font-size: 12px;
+  }
+  .el-pagination .btn-prev,
+  .el-pagination .btn-next,
+  .el-pagination .el-pager li {
+    min-width: 28px;
+    height: 28px;
+    line-height: 26px;
+    font-size: 12px;
+  }
+  /* 隐藏"跳转到"选择器,节省空间 */
+  .el-pagination .el-pagination__jump {
+    display: none;
+  }
+}
+
+/* 工具栏内联表单:窄屏时换行 */
+@media (max-width: 640px) {
+  .el-form--inline .el-form-item {
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+  .el-form--inline .el-form-item__content {
+    flex-wrap: wrap;
+  }
+}
+
+/* 卡片内边距在手机上缩小 */
+@media (max-width: 480px) {
+  .el-card {
+    --el-card-padding: 12px 14px;
+  }
+}
+
+/* ========== 表格移动端响应式优化 ========== */
+
+/* 标记为 hide-mobile 的列在窄屏隐藏(同时作用于表头与单元格) */
+@media (max-width: 768px) {
+  .el-table th.hide-mobile,
+  .el-table td.hide-mobile {
+    display: none;
+  }
+
+  /* 操作列按钮更紧凑,减少占用空间 */
+  .el-table .el-button + .el-button {
+    margin-left: 4px;
+  }
+}
+
+/* 表格容器:确保横向滚动可用,且不撑破布局 */
+.el-table {
+  width: 100%;
+}
+
+/* 确保表格外层容器允许横向滚动 */
+.el-table--scrollable-x .el-table__body-wrapper {
+  overflow-x: auto;
+}
+
+/* ========== 全局滚动条样式(上下滑动预览 + 可见滚动条) ========== */
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c0c4cc transparent;
+}
+
+/* WebKit / Chromium / Edge */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #c0c4cc;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #909399;
+  background-clip: content-box;
+}
+
+/* 滚动条两端的箭头按钮(可选,保持默认隐藏以节省空间) */
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+/* 平滑滚动:鼠标点击滚动条轨道时平滑跳转,提升"滑动预览"体验 */
+html,
+.main,
+.el-table__body-wrapper,
+.el-drawer__body,
+.el-dialog__body {
+  scroll-behavior: smooth;
+}
+
+/* ========== Element Plus 组件全局粉系覆盖(与侧边栏对齐) ========== */
+
+/* ------ 卡片:圆角 + 统一渐变 + 粉色阴影(去白) ------ */
+.el-card {
+  border: none;
+  border-radius: 14px;
+  background: var(--card-gradient);
+  box-shadow: var(--card-shadow);
+  transition: box-shadow 0.2s;
+}
+.el-card:hover {
+  box-shadow: var(--card-shadow-hover);
+}
+.el-card__header {
+  border-bottom-color: rgba(236, 107, 154, 0.15);
+}
+
+/* ------ 表格:粉色边框 + 粉色表头 + 柔和斑马纹 ------ */
+.el-table {
+  --el-table-border-color: #f8bbd0;
+  --el-table-header-bg-color: #fce4ec;
+  --el-table-row-hover-bg-color: #fde8ef;
+  --el-table-header-text-color: #880e4f;
+  --el-table-text-color: #ad1457;
+  --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: transparent;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.el-table::before {
+  /* 去掉底部默认蓝线 */
+  display: none;
+}
+.el-table th.el-table__cell {
+  background: #fce4ec !important;
+  color: #880e4f;
+  font-weight: 600;
+}
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+  background: rgba(252, 228, 236, 0.5);
+}
+.el-table .el-table__cell {
+  border-bottom-color: #f8bbd0;
+}
+.el-table__inner-wrapper::before {
+  background-color: #f8bbd0;
+}
+
+/* ------ 按钮:圆角 + 主色粉色(已由变量覆盖,补充细节) ------ */
+.el-button {
+  border-radius: 8px;
+  font-weight: 500;
+}
+.el-button--primary {
+  --el-button-bg-color: #f48fb1;
+  --el-button-border-color: #f48fb1;
+  --el-button-hover-bg-color: #f6a5c1;
+  --el-button-hover-border-color: #f6a5c1;
+  --el-button-active-bg-color: #ec6b9a;
+  --el-button-active-border-color: #ec6b9a;
+}
+.el-button--success {
+  --el-button-bg-color: #f8bbd0;
+  --el-button-border-color: #f8bbd0;
+  --el-button-hover-bg-color: #fce4ec;
+  --el-button-hover-border-color: #fce4ec;
+  --el-button-active-bg-color: #f48fb1;
+  --el-button-active-border-color: #f48fb1;
+  color: #880e4f;
+}
+.el-button--warning {
+  --el-button-bg-color: #ec6b9a;
+  --el-button-border-color: #ec6b9a;
+  --el-button-hover-bg-color: #f48fb1;
+  --el-button-hover-border-color: #f48fb1;
+  --el-button-active-bg-color: #c2185b;
+  --el-button-active-border-color: #c2185b;
+}
+.el-button--danger {
+  --el-button-bg-color: #e91e63;
+  --el-button-border-color: #e91e63;
+  --el-button-hover-bg-color: #ec407a;
+  --el-button-hover-border-color: #ec407a;
+  --el-button-active-bg-color: #c2185b;
+  --el-button-active-border-color: #c2185b;
+}
+/* link 按钮:粉色 */
+.el-button.is-link {
+  --el-button-text-color: #c2185b;
+  --el-button-hover-text-color: #ec6b9a;
+}
+
+/* ------ 输入框 / 选择框:粉色 focus ------ */
+.el-input__wrapper,
+.el-select__wrapper {
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #f8bbd0 inset;
+  transition: box-shadow 0.2s;
+}
+.el-input__wrapper.is-focus,
+.el-select__wrapper.is-focused {
+  box-shadow: 0 0 0 1px #f48fb1 inset, 0 0 0 2px rgba(244, 143, 177, 0.2);
+}
+.el-input__inner {
+  color: #880e4f;
+}
+.el-input__inner::placeholder {
+  color: #c2185b;
+}
+
+/* ------ 分页器:粉色 active ------ */
+.el-pagination.is-background .el-pager li.is-active {
+  background-color: #f48fb1;
+  color: #fff;
+}
+.el-pagination.is-background .btn-next,
+.el-pagination.is-background .btn-prev,
+.el-pagination.is-background .el-pager li {
+  background-color: #fce4ec;
+  color: #880e4f;
+}
+.el-pagination.is-background .btn-next:hover:not(.disabled),
+.el-pagination.is-background .btn-prev:hover:not(.disabled),
+.el-pagination.is-background .el-pager li:hover:not(.is-active) {
+  color: #c2185b;
+}
+
+/* ------ 对话框:圆角 + 粉色标题 + 淡粉底 ------ */
+.el-dialog {
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fdf1f5;
+}
+.el-dialog__header {
+  background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+  padding: 16px 20px;
+  margin-right: 0;
+}
+.el-dialog__title {
+  color: #880e4f;
+  font-weight: 600;
+}
+.el-dialog__headerbtn .el-dialog__close {
+  color: #880e4f;
+}
+.el-dialog__headerbtn .el-dialog__close:hover {
+  color: #c2185b;
+}
+.el-dialog__footer {
+  border-top: 1px solid #fce4ec;
+}
+
+/* ------ Tag:粉色系 ------ */
+.el-tag {
+  border-radius: 6px;
+}
+.el-tag--success {
+  --el-tag-bg-color: #fce4ec;
+  --el-tag-border-color: #f8bbd0;
+  --el-tag-text-color: #880e4f;
+}
+.el-tag--warning {
+  --el-tag-bg-color: #fde8ef;
+  --el-tag-border-color: #f48fb1;
+  --el-tag-text-color: #c2185b;
+}
+.el-tag--danger {
+  --el-tag-bg-color: #fce4ec;
+  --el-tag-border-color: #ec6b9a;
+  --el-tag-text-color: #c2185b;
+}
+.el-tag--info {
+  --el-tag-bg-color: #fce4ec;
+  --el-tag-border-color: #f8bbd0;
+  --el-tag-text-color: #880e4f;
+}
+
+/* ------ 表单 label:粉色 ------ */
+.el-form-item__label {
+  color: #880e4f;
+}
+
+/* ------ 下拉菜单:粉色 ------ */
+.el-select-dropdown__item.is-hovering {
+  background-color: #fce4ec;
+}
+.el-select-dropdown__item.is-selected {
+  color: #c2185b;
+  font-weight: 600;
+}
+
+/* ------ Message / MessageBox:粉色 ------ */
+.el-message {
+  border-radius: 10px;
+}
+
+/* ------ Radio / Checkbox:粉色 active ------ */
+.el-radio__input.is-checked .el-radio__inner {
+  background-color: #f48fb1;
+  border-color: #f48fb1;
+}
+.el-radio__input.is-checked + .el-radio__label {
+  color: #c2185b;
+}
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  background-color: #f48fb1;
+  border-color: #f48fb1;
+}
+.el-checkbox__input.is-checked + .el-checkbox__label {
+  color: #c2185b;
+}
+
+/* ------ InputNumber:粉色 ------ */
+.el-input-number {
+  --el-input-number-btn-bg-color: #fce4ec;
+}
+.el-input-number .el-input-number__decrease,
+.el-input-number .el-input-number__increase {
+  color: #c2185b;
+}
+.el-input-number .el-input-number__decrease:hover,
+.el-input-number .el-input-number__increase:hover {
+  color: #ec6b9a;
+}
