@@ -1,10 +1,11 @@
 from datetime import date
 from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
+from sqlalchemy import text
 
 from .config import Config
 from .extensions import db, migrate, jwt, cors
-from .models import Admin, Category, Book, Reader, BorrowRecord  # noqa: F401 - 确保模型被注册
+from .models import Admin, Category, Book, Reader, BorrowRecord, Reservation  # noqa: F401 - 确保模型被注册
 
 
 def create_app(config_class=Config) -> Flask:
@@ -17,13 +18,15 @@ def create_app(config_class=Config) -> Flask:
     jwt.init_app(app)
     cors.init_app(app, resources=app.config.get("CORS_RESOURCES", {r"/api/*": {"origins": "*"}}))
 
-    # JWT: 从 sub (admin id) 加载用户
+    # JWT: 按 role claim 分发加载用户(管理员/学生)
     @jwt.user_lookup_loader
     def _user_lookup(_jwt_header, jwt_data):
-        identity = jwt_data.get("sub")
-        if identity is None:
+        role = jwt_data.get("role", "admin")
+        sub = jwt_data.get("sub")
+        if sub is None:
             return None
-        return Admin.query.get(int(identity))
+        model = Reader if role == "reader" else Admin
+        return model.query.get(int(sub))
 
     # 注册蓝图（延迟导入避免循环）
     from .api.auth_api import auth_bp
@@ -31,12 +34,16 @@ def create_app(config_class=Config) -> Flask:
     from .api.book_api import book_bp
     from .api.reader_api import reader_bp
     from .api.borrow_api import borrow_bp
+    from .api.reservation_api import reservation_bp
+    from .api.student_api import student_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(category_bp, url_prefix="/api/categories")
     app.register_blueprint(book_bp, url_prefix="/api/books")
     app.register_blueprint(reader_bp, url_prefix="/api/readers")
     app.register_blueprint(borrow_bp, url_prefix="/api/borrow")
+    app.register_blueprint(reservation_bp, url_prefix="/api/reservations")
+    app.register_blueprint(student_bp, url_prefix="/api/student")
 
     # 健康检查 & 根路由
     @app.route("/")
@@ -72,12 +79,33 @@ def create_app(config_class=Config) -> Flask:
     def server_error(e):
         return jsonify({"code": 500, "msg": f"Internal Server Error: {str(e)}"}), 500
 
-    # 初始化数据：建表 + 默认管理员 + 示例分类/图书/读者
+    # 初始化数据：建表 + 启动迁移 + 默认管理员 + 示例分类/图书/读者
     with app.app_context():
         db.create_all()
+        _migrate_schema()
         _seed_defaults()
+        _backfill_reader_passwords()
 
     return app
+
+
+def _migrate_schema() -> None:
+    """轻量启动迁移:db.create_all() 不会给已有表加列,这里用 PRAGMA 检查并 ALTER"""
+    columns = [row[1] for row in db.session.execute(text("PRAGMA table_info(readers)"))]
+    if "password_hash" not in columns:
+        db.session.execute(
+            text("ALTER TABLE readers ADD COLUMN password_hash VARCHAR(256)")
+        )
+        db.session.commit()
+
+
+def _backfill_reader_passwords() -> None:
+    """为没有密码的读者回填默认密码(=借书证号)"""
+    readers = Reader.query.filter(Reader.password_hash.is_(None)).all()
+    for reader in readers:
+        reader.set_password(reader.card_no)
+    if readers:
+        db.session.commit()
 
 
 def _seed_defaults() -> None:

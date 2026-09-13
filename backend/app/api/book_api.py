@@ -4,6 +4,7 @@ from marshmallow import ValidationError
 from ..extensions import db
 from ..models import Book, BookSchema
 from ..config import Config
+from .decorators import admin_required
 
 book_bp = Blueprint("book", __name__)
 
@@ -50,6 +51,7 @@ def get_book(bid):
 
 
 @book_bp.post("")
+@admin_required
 def create_book():
     try:
         data = BookSchema().load(request.get_json(force=True, silent=True) or {})
@@ -70,6 +72,7 @@ def create_book():
 
 
 @book_bp.put("/<int:bid>")
+@admin_required
 def update_book(bid):
     book = Book.query.get_or_404(bid)
     try:
@@ -85,6 +88,7 @@ def update_book(bid):
 
 
 @book_bp.delete("/<int:bid>")
+@admin_required
 def delete_book(bid):
     book = Book.query.get_or_404(bid)
     db.session.delete(book)

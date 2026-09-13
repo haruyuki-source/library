@@ -7,6 +7,7 @@ from marshmallow import ValidationError
 from ..extensions import db
 from ..models import BorrowRecord, Book, Reader, BorrowSchema, ReturnSchema, RenewSchema
 from ..config import Config
+from .decorators import admin_required
 
 borrow_bp = Blueprint("borrow", __name__)
 
@@ -28,6 +29,7 @@ def _paginate(query):
 
 
 @borrow_bp.get("")
+@admin_required
 def list_borrows():
     """借阅记录列表:支持 status 过滤 + 分页"""
     q = BorrowRecord.query.order_by(BorrowRecord.id.desc())
@@ -48,13 +50,14 @@ def list_borrows():
 
 
 @borrow_bp.get("/<int:rid>")
+@admin_required
 def get_borrow(rid):
     rec = BorrowRecord.query.get_or_404(rid)
     return jsonify({"code": 0, "msg": "ok", "data": rec.to_dict()})
 
 
 @borrow_bp.post("")
-@jwt_required()
+@admin_required
 def create_borrow():
     """借书:校验图书库存与读者借阅上限,生成借阅记录"""
     try:
@@ -98,7 +101,7 @@ def create_borrow():
 
 
 @borrow_bp.put("/<int:rid>/return")
-@jwt_required()
+@admin_required
 def return_book(rid):
     """还书:记录归还日期,归还库存,计算逾期罚金"""
     rec = BorrowRecord.query.get_or_404(rid)
@@ -122,7 +125,7 @@ def return_book(rid):
 
 
 @borrow_bp.put("/<int:rid>/renew")
-@jwt_required()
+@admin_required
 def renew_book(rid):
     """续借:延长应还日期,续借次数 +1"""
     rec = BorrowRecord.query.get_or_404(rid)
@@ -142,7 +145,7 @@ def renew_book(rid):
 
 
 @borrow_bp.delete("/<int:rid>")
-@jwt_required()
+@admin_required
 def delete_borrow(rid):
     """删除借阅记录:若记录仍在借阅中,需归还库存"""
     rec = BorrowRecord.query.get_or_404(rid)

@@ -5,6 +5,7 @@ import { getBooksApi } from '@/api/book'
 import { getReadersApi } from '@/api/reader'
 import { getCategoriesApi } from '@/api/category'
 import { getBorrowsApi } from '@/api/borrow'
+import { getReservationsApi } from '@/api/reservation'
 
 const router = useRouter()
 
@@ -13,7 +14,8 @@ const stats = ref([
   { label: '图书总数', value: 0, icon: 'Reading', to: '/book' },
   { label: '读者总数', value: 0, icon: 'User', to: '/reader' },
   { label: '借阅中', value: 0, icon: 'Switch', to: '/borrow' },
-  { label: '分类数', value: 0, icon: 'Files', to: '/category' }
+  { label: '分类数', value: 0, icon: 'Files', to: '/category' },
+  { label: '预约中', value: 0, icon: 'Stamp', to: '/reservation' }
 ])
 
 function goTo(path) {
@@ -25,17 +27,19 @@ const loading = ref(false)
 async function fetchStats() {
   loading.value = true
   try {
-    // 并行请求 4 个统计数据
-    const [books, readers, categories, borrows] = await Promise.all([
+    // 并行请求统计数据
+    const [books, readers, categories, borrows, reservations] = await Promise.all([
       getBooksApi({ page_size: 1 }),
       getReadersApi({ page_size: 1 }),
       getCategoriesApi(),
-      getBorrowsApi({ status: 'borrowed', page_size: 1 })
+      getBorrowsApi({ status: 'borrowed', page_size: 1 }),
+      getReservationsApi({ status: 'reserved', page_size: 1 })
     ])
     stats.value[0].value = books.total || 0
     stats.value[1].value = readers.total || 0
     stats.value[2].value = borrows.total || 0
     stats.value[3].value = categories.total || 0
+    stats.value[4].value = reservations.total || 0
   } catch (err) {
     // 接口错误已由 request 拦截器统一提示
   } finally {
@@ -54,7 +58,7 @@ onMounted(fetchStats)
         :key="item.label"
         :xs="12"
         :sm="12"
-        :md="6"
+        :md="8"
       >
         <el-card
           class="stat-card"

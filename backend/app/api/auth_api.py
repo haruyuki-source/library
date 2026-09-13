@@ -25,7 +25,9 @@ def login():
     if not admin or not admin.check_password(data["password"]):
         return jsonify({"code": 401, "msg": "用户名或密码错误"}), 401
 
-    access_token = create_access_token(identity=str(admin.id))
+    access_token = create_access_token(
+        identity=str(admin.id), additional_claims={"role": "admin"}
+    )
     return jsonify({
         "code": 0,
         "msg": "登录成功",

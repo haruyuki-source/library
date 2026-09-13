@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
 import { loginApi, getProfileApi } from '@/api/auth'
 
-// 鉴权状态:token 持久化到 localStorage,用户信息懒加载
+// 管理员端鉴权状态:token 持久化到 localStorage(与学生端 key 隔离)
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    token: localStorage.getItem('token') || '',
-    user: JSON.parse(localStorage.getItem('user') || 'null')
+    token: localStorage.getItem('admin_token') || '',
+    user: JSON.parse(localStorage.getItem('admin_user') || 'null')
   }),
 
   getters: {
@@ -18,9 +18,9 @@ export const useAuthStore = defineStore('auth', {
       const data = await loginApi(credentials)
       this.token = data.access_token
       this.user = data.user || null
-      localStorage.setItem('token', this.token)
+      localStorage.setItem('admin_token', this.token)
       if (this.user) {
-        localStorage.setItem('user', JSON.stringify(this.user))
+        localStorage.setItem('admin_user', JSON.stringify(this.user))
       }
       return data
     },
@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', {
       if (!this.token) return null
       const data = await getProfileApi()
       this.user = data
-      localStorage.setItem('user', JSON.stringify(this.user))
+      localStorage.setItem('admin_user', JSON.stringify(this.user))
       return data
     },
 
@@ -38,8 +38,8 @@ export const useAuthStore = defineStore('auth', {
     logout() {
       this.token = ''
       this.user = null
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
+      localStorage.removeItem('admin_token')
+      localStorage.removeItem('admin_user')
     }
   }
 })

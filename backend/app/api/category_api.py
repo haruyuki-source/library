@@ -4,6 +4,7 @@ from marshmallow import ValidationError
 from ..extensions import db
 from ..models import Category, CategorySchema
 from ..config import Config
+from .decorators import admin_required
 
 category_bp = Blueprint("category", __name__)
 
@@ -45,6 +46,7 @@ def get_category(cid):
 
 
 @category_bp.post("")
+@admin_required
 def create_category():
     try:
         data = CategorySchema().load(request.get_json(force=True, silent=True) or {})
@@ -61,6 +63,7 @@ def create_category():
 
 
 @category_bp.put("/<int:cid>")
+@admin_required
 def update_category(cid):
     cat = Category.query.get_or_404(cid)
     try:
@@ -76,6 +79,7 @@ def update_category(cid):
 
 
 @category_bp.delete("/<int:cid>")
+@admin_required
 def delete_category(cid):
     cat = Category.query.get_or_404(cid)
     db.session.delete(cat)

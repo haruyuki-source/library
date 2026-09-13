@@ -5,6 +5,7 @@ import {
   getReadersApi,
   createReaderApi,
   updateReaderApi,
+  resetReaderPasswordApi,
   deleteReaderApi
 } from '@/api/reader'
 
@@ -92,6 +93,21 @@ async function submit() {
   fetchList()
 }
 
+// 重置/设置读者登录密码:留空则重置为借书证号
+async function handleResetPassword(row) {
+  const { value } = await ElMessageBox.prompt(
+    `为读者 ${row.name} 设置学生端登录密码,留空则重置为借书证号(${row.card_no})`,
+    '重置密码',
+    {
+      inputPlaceholder: '留空重置为借书证号',
+      inputValidator: (v) =>
+        !v || (v.length >= 6 && v.length <= 128) || '密码长度需 6-128 位'
+    }
+  )
+  const res = await resetReaderPasswordApi(row.id, { password: value || null })
+  ElMessage.success(res?.msg || '操作成功')
+}
+
 async function handleDelete(row) {
   await ElMessageBox.confirm(`确认删除读者 ${row.name}?`, '提示', {
     type: 'warning'
@@ -146,9 +162,10 @@ onMounted(fetchList)
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="100" align="center">
+        <el-table-column label="操作" width="160" align="center">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openEdit(row)">编辑</el-button>
+            <el-button link type="primary" size="small" @click="handleResetPassword(row)">重置密码</el-button>
             <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>

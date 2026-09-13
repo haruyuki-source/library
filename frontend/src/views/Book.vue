@@ -144,10 +144,10 @@ onMounted(() => {
     <el-card shadow="never">
       <el-table v-loading="loading" :data="list" border stripe>
         <el-table-column type="index" label="#" width="50" />
-        <el-table-column prop="title" label="书名" min-width="140" show-overflow-tooltip />
-        <el-table-column prop="isbn" label="ISBN" width="130" />
-        <el-table-column prop="author" label="作者" width="90" class-name="hide-mobile" />
-        <el-table-column prop="publisher" label="出版社" width="120" class-name="hide-mobile" />
+        <el-table-column prop="title" label="书名" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="isbn" label="ISBN" min-width="150" show-overflow-tooltip />
+        <el-table-column prop="author" label="作者" min-width="110" class-name="hide-mobile" />
+        <el-table-column prop="publisher" label="出版社" min-width="170" show-overflow-tooltip class-name="hide-mobile" />
         <el-table-column label="分类" width="80" class-name="hide-mobile">
           <template #default="{ row }">
             {{ row.category?.name || '-' }}

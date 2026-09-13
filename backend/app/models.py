@@ -64,6 +64,7 @@ class Reader(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     card_no = db.Column(db.String(32), unique=True, nullable=False, index=True)  # 借阅证号
+    password_hash = db.Column(db.String(256))  # 学生端登录密码;NULL 时默认密码=借书证号
     name = db.Column(db.String(64), nullable=False)
     gender = db.Column(db.String(8))  # male / female / other
     phone = db.Column(db.String(20))
@@ -74,6 +75,15 @@ class Reader(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     borrow_records = db.relationship("BorrowRecord", backref="reader_ref", lazy="dynamic")
+
+    def set_password(self, password: str) -> None:
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password: str) -> bool:
+        if not self.password_hash:
+            # 兜底:未设置密码时默认密码=借书证号
+            return password == self.card_no
+        return check_password_hash(self.password_hash, password)
 
     def to_dict(self) -> dict:
         return {
@@ -202,6 +212,61 @@ class BorrowRecord(db.Model):
         return data
 
 
+class Reservation(db.Model):
+    """图书预约:学生线上预约索书,到馆后由管理员确认转为借阅(此时才扣库存)"""
+    __tablename__ = "reservations"
+
+    # 状态码常量,所有查询/流转统一使用
+    RESERVED = "reserved"    # 预约中
+    FULFILLED = "fulfilled"  # 已到馆办理,转为借阅
+    CANCELLED = "cancelled"  # 已取消(学生或管理员)
+
+    id = db.Column(db.Integer, primary_key=True)
+    reader_id = db.Column(db.Integer, db.ForeignKey("readers.id"), nullable=False, index=True)
+    book_id = db.Column(db.Integer, db.ForeignKey("books.id"), nullable=False, index=True)
+    status = db.Column(db.String(16), default=RESERVED, nullable=False, index=True)
+    reserve_date = db.Column(db.Date, default=date.today, nullable=False)  # 预约日期
+    expire_date = db.Column(db.Date, nullable=False)  # 预约保留至(超期可视为失效)
+    fulfill_date = db.Column(db.Date)  # 到馆确认借书日期
+    borrow_record_id = db.Column(db.Integer, db.ForeignKey("borrow_records.id"))  # 转借阅后的记录
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    reader = db.relationship("Reader", backref="reservations")
+    book = db.relationship("Book", backref="reservations")
+    borrow_record = db.relationship("BorrowRecord", foreign_keys=[borrow_record_id])
+
+    def to_dict(self, include_reader: bool = True, include_book: bool = True) -> dict:
+        data = {
+            "id": self.id,
+            "reader_id": self.reader_id,
+            "book_id": self.book_id,
+            "status": self.status,
+            "reserve_date": self.reserve_date.isoformat() if self.reserve_date else None,
+            "expire_date": self.expire_date.isoformat() if self.expire_date else None,
+            "fulfill_date": self.fulfill_date.isoformat() if self.fulfill_date else None,
+            "borrow_record_id": self.borrow_record_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }
+        if include_reader and self.reader:
+            data["reader"] = {
+                "id": self.reader.id,
+                "card_no": self.reader.card_no,
+                "name": self.reader.name,
+            }
+        if include_book and self.book:
+            data["book"] = {
+                "id": self.book.id,
+                "isbn": self.book.isbn,
+                "title": self.book.title,
+                "author": self.book.author,
+                "available_quantity": self.book.available_quantity,
+                "total_quantity": self.book.total_quantity,
+            }
+        if self.borrow_record:
+            data["due_date"] = self.borrow_record.due_date.isoformat() if self.borrow_record.due_date else None
+        return data
+
+
 # ============================================================
 # Marshmallow Schemas (validation + serialization)
 # ============================================================
@@ -209,6 +274,39 @@ class BorrowRecord(db.Model):
 class LoginSchema(Schema):
     username = fields.String(required=True, validate=validate.Length(min=1, max=64))
     password = fields.String(required=True, validate=validate.Length(min=1, max=128))
+
+
+class StudentLoginSchema(Schema):
+    """学生端登录:借书证号 + 密码"""
+    card_no = fields.String(required=True, validate=validate.Length(min=1, max=32))
+    password = fields.String(required=True, validate=validate.Length(min=1, max=128))
+
+
+class ChangePasswordSchema(Schema):
+    """学生端修改密码"""
+    old_password = fields.String(required=True, validate=validate.Length(min=1, max=128))
+    new_password = fields.String(required=True, validate=validate.Length(min=6, max=128))
+
+
+class ForgotPasswordSchema(Schema):
+    """学生端忘记密码:借书证号 + 预留手机号 校验后重置"""
+    card_no = fields.String(required=True, validate=validate.Length(min=1, max=32))
+    phone = fields.String(required=True, validate=validate.Length(min=1, max=20))
+    new_password = fields.String(required=True, validate=validate.Length(min=6, max=128))
+
+
+class StudentReservationSchema(Schema):
+    """学生端预约索书:仅需图书 ID,预约日期/保留期由服务端确定,不扣库存"""
+    class Meta:
+        unknown = EXCLUDE
+
+    book_id = fields.Integer(required=True)
+
+
+class ReaderPasswordSchema(Schema):
+    """管理员设置/重置读者密码;password 为 None 表示重置为借书证号"""
+    password = fields.String(load_default=None, allow_none=True,
+                             validate=validate.Length(min=6, max=128))
 
 
 class RegisterSchema(Schema):
@@ -243,6 +341,13 @@ class ReaderSchema(Schema):
     status = fields.String(load_default="active", validate=validate.OneOf(["active", "disabled"]))
     max_borrow = fields.Integer(load_default=5, validate=validate.Range(min=1, max=100))
     created_at = fields.DateTime(dump_only=True)
+
+    @pre_load
+    def _blank_email_to_none(self, data, **kwargs):
+        # 表单空字符串转为 None:allow_none 只接受 None,'' 会被 Email 校验拒绝
+        if isinstance(data, dict) and data.get("email") == "":
+            data["email"] = None
+        return data
 
 
 class BookSchema(Schema):
