@@ -1,6 +1,6 @@
 # 图书馆管理系统
 
-基于 **Vue 3 + Flask** 前后端分离架构的图书馆管理系统，实现图书管理、读者管理、分类管理、借阅管理等核心功能，支持桌面端与移动端自适应显示。
+基于 **Vue 3 + Flask** 前后端分离架构的图书馆管理系统，分为**管理员端**与**学生端**两个入口（JWT 角色隔离），实现图书管理、读者管理、分类管理、借阅管理、**线上预约索书**（学生预约 → 到馆管理员确认后转借阅并扣减库存）等核心功能，支持桌面端与移动端自适应显示。
 
 ---
 
@@ -48,11 +48,14 @@
 │   │   ├── extensions.py       # 扩展实例（db/jwt/cors/migrate）
 │   │   ├── models.py           # 数据模型 + Marshmallow Schemas
 │   │   └── api/                # 业务接口蓝图
-│   │       ├── auth_api.py     # 登录 / 当前用户
+│   │       ├── decorators.py   # JWT 角色装饰器：admin_required / reader_required
+│   │       ├── auth_api.py     # 管理员登录 / 当前用户
 │   │       ├── book_api.py     # 图书 CRUD + 搜索
 │   │       ├── reader_api.py   # 读者 CRUD + 搜索
 │   │       ├── category_api.py # 分类 CRUD
-│   │       └── borrow_api.py   # 借书 / 还书 / 续借
+│   │       ├── borrow_api.py   # 借书 / 还书 / 续借
+│   │       ├── reservation_api.py # 管理员预约管理：确认借书(转借阅+扣库存)/取消
+│   │       └── student_api.py  # 学生端：登录/资料/改密/我的借阅/预约/取消预约
 │   ├── library.db              # SQLite 数据库文件（自动生成）
 │   ├── requirements.txt        # Python 依赖
 │   └── run.py                  # 启动入口（端口 5000）
@@ -62,24 +65,36 @@
 │   │   ├── main.js             # 应用入口
 │   │   ├── App.vue             # 根组件
 │   │   ├── api/                # 接口封装
-│   │   │   ├── request.js      # Axios 实例 + 拦截器
+│   │   │   ├── request.js      # Axios 双实例(admin/student) + 拦截器
 │   │   │   ├── auth.js
 │   │   │   ├── book.js
 │   │   │   ├── reader.js
 │   │   │   ├── category.js
-│   │   │   └── borrow.js
-│   │   ├── router/index.js     # 路由表 + 登录守卫
-│   │   ├── store/auth.js       # Pinia 鉴权状态
+│   │   │   ├── borrow.js
+│   │   │   ├── reservation.js  # 管理员预约管理接口
+│   │   │   └── student.js      # 学生端接口
+│   │   ├── router/index.js     # 路由表 + 登录守卫(双端隔离)
+│   │   ├── store/
+│   │   │   ├── auth.js         # Pinia 管理员鉴权状态
+│   │   │   └── student.js      # Pinia 学生鉴权状态
 │   │   ├── layouts/
-│   │   │   └── MainLayout.vue  # 主布局（响应式侧边栏 + 顶栏）
+│   │   │   ├── MainLayout.vue  # 管理员端布局(响应式侧边栏 + 顶栏)
+│   │   │   └── StudentLayout.vue # 学生端布局
 │   │   ├── views/              # 页面
-│   │   │   ├── Login.vue
-│   │   │   ├── Dashboard.vue
+│   │   │   ├── Login.vue       # 登录页(管理员/学生角色切换,双端复用)
+│   │   │   ├── Dashboard.vue   # 管理员首页概览
 │   │   │   ├── Book.vue
 │   │   │   ├── Reader.vue
 │   │   │   ├── Category.vue
 │   │   │   ├── Borrow.vue
-│   │   │   └── NotFound.vue
+│   │   │   ├── Reservation.vue # 管理员预约管理
+│   │   │   ├── NotFound.vue
+│   │   │   └── student/        # 学生端页面
+│   │   │       ├── StudentBooks.vue        # 图书检索 / 预约
+│   │   │       ├── StudentReservations.vue # 我的预约
+│   │   │       ├── StudentBorrows.vue      # 我的借阅
+│   │   │       ├── StudentProfile.vue      # 个人信息
+│   │   │       └── StudentPassword.vue     # 修改密码
 │   │   └── styles/main.css     # 全局样式 + 移动端适配
 │   ├── index.html
 │   ├── vite.config.js          # Vite 配置（/api 代理到 5000）
@@ -92,14 +107,44 @@
 
 ## 三、功能模块
 
+### 管理员端（`/login`）
+
 | 模块 | 功能 |
 |---|---|
 | 登录鉴权 | 用户名密码登录、JWT 签发、401 自动跳转登录页 |
-| 首页概览 | 图书/读者/借阅/分类统计卡片，**卡片可点击跳转对应模块** |
-| 图书管理 | 图书列表、关键词搜索、分页、新增/编辑/删除；表单左对齐布局，出版年份/价格为普通输入框，可借库存带加减控件 |
-| 读者管理 | 读者列表、搜索、分页、新增/编辑/删除 |
+| 首页概览 | 图书/读者/借阅中/分类/预约中统计卡片（点击跳转对应管理页） |
+| 图书管理 | 图书列表、关键词搜索、分页、新增/编辑/删除 |
+| 读者管理 | 读者列表、搜索、分页、新增/编辑/删除、设置可借上限 |
 | 分类管理 | 分类 CRUD |
 | 借阅管理 | 借书、还书（自动计算逾期罚金）、续借、删除 |
+| 预约管理 | 预约列表（状态/读者/图书筛选）、扫码或输入预约号快速办理、确认借书、取消预约 |
+
+### 学生端（`/student/login`）
+
+| 模块 | 功能 |
+|---|---|
+| 登录鉴权 | 借书证号 + 密码登录、忘记密码（预留手机号）、JWT 角色隔离 |
+| 图书检索 | 图书搜索、查看可借库存、在线预约 |
+| 我的预约 | 查看预约记录与保留期限、取消预约 |
+| 我的借阅 | 查看在借/历史借阅、应还日期 |
+| 个人信息 | 查看本人资料（点击顶部用户名进入） |
+| 修改密码 | 自助修改登录密码 |
+
+### 预约索书业务流程
+
+```
+学生在线预约(状态:预约中,库存不扣减,保留期 7 天)
+        │
+        ├── 学生在保留期内可主动取消
+        │
+        ▼
+学生到馆 → 管理员在「预约管理」确认借书
+        │  (同一事务内:校验库存 → 生成借阅记录(借期30天) → 可借库存 -1 → 预约转已办理)
+        ▼
+   状态:借阅中
+```
+
+> 库存扣减唯一入口为管理员的「确认借书」动作；学生端任何操作都不会直接扣减库存。
 
 ---
 
@@ -143,15 +188,26 @@ npm run dev
 
 ### 3. 访问
 
-- 前端：http://localhost:5173
+- 管理员端：http://localhost:5173/login
+- 学生端：http://localhost:5173/student/login
 - 后端：http://localhost:5000
 - 后端健康检查：http://localhost:5000/api/health
 
 ### 4. 默认账号
 
+管理员：
+
 | 用户名 | 密码 | 角色 |
 |---|---|---|
 | admin | admin123 | 超级管理员 |
+
+学生（密码与借书证号相同）：
+
+| 借书证号（账号/密码） | 姓名 |
+|---|---|
+| R2024001 | 张三 |
+| R2024002 | 李四 |
+| R2024003 | 王五 |
 
 ---
 
@@ -208,6 +264,31 @@ npm run dev
 | PUT | `/api/borrow/:id/renew` | 续借（需登录） |
 | DELETE | `/api/borrow/:id` | 删除记录（需登录） |
 
+### 学生端（前缀 `/api/student`，读者 Token）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/login` | 借书证号 + 密码登录 |
+| POST | `/forgot-password` | 忘记密码（校验预留手机号） |
+| GET | `/profile` | 当前学生信息 |
+| PUT | `/password` | 修改密码 |
+| GET | `/borrows` | 我的借阅记录 |
+| GET | `/borrows/active` | 当前在借 |
+| POST | `/reservations` | 预约图书（**不扣库存**，保留期 7 天） |
+| GET | `/reservations` | 我的预约（支持 `status` 过滤） |
+| POST | `/reservations/:id/cancel` | 取消本人预约（仅预约中可取消） |
+
+> 学生端图书检索/分类直接复用公共接口 `GET /api/books`、`GET /api/categories`（无需管理员权限）。
+
+### 预约管理（前缀 `/api/reservations`，管理员 Token）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `` | 预约列表（`status`/`reader_id`/`book_id` 过滤 + 分页） |
+| GET | `/:id` | 预约详情 |
+| PUT | `/:id/fulfill` | **确认借书**：转借阅 + 扣减 1 本库存（同一事务） |
+| PUT | `/:id/cancel` | 管理员取消预约 |
+
 ---
 
 ## 七、数据库说明
@@ -227,6 +308,7 @@ npm run dev
 | books | 图书 |
 | readers | 读者 |
 | borrow_records | 借阅记录 |
+| reservations | 预约记录（reserved 预约中 / fulfilled 已办理 / cancelled 已取消） |
 
 ---
 
@@ -234,11 +316,7 @@ npm run dev
 
 - 桌面端：常驻左侧导航栏（220px）+ 顶部栏
 - 移动端（≤768px）：左侧栏变为抽屉式，顶部栏左侧显示汉堡按钮
-- **抽屉菜单全深色背景**，无底部留白
-- 表格支持横向滚动，**移动端自动隐藏非关键列**（如出版社、作者等），仅保留核心字段 + 操作列
-- 操作列不再锁死右侧，随表格自然滚动
-- 弹窗自动限宽，分页器窄屏紧凑显示
-- 首页统计卡片移动端 2 列布局，文字横向显示不换行
+- 表格支持横向滚动，弹窗自动限宽，分页器窄屏紧凑显示
 
 ---
 
@@ -251,19 +329,3 @@ npm run preview    # 本地预览构建产物
 ```
 
 可将 `dist/` 目录部署到 Nginx 等静态服务器，并配置 `/api` 反向代理到后端 Flask 服务。
-
----
-
-## 十、关键设计说明
-
-### 后端参数校验
-
-- 所有 Marshmallow Schema 设置 `class Meta: unknown = EXCLUDE`，忽略前端传来的多余字段（如 `id`）
-- `BookSchema` 通过 `pre_load` 钩子将空字符串自动转 `None`，避免数值字段校验失败
-- 数值字段（出版年份、价格、总馆藏等）允许 `null`，留空时后端自动填充默认值
-
-### 前端响应式策略
-
-- 非关键列使用 `hide-mobile` CSS 类在 ≤768px 时 `display: none` 隐藏
-- 操作列宽度 100-120px，不使用 `fixed="right"`，随表格滚动
-- 首页卡片使用 `white-space: nowrap` 防止标签文字竖排
